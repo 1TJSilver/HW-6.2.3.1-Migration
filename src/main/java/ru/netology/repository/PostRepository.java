@@ -24,7 +24,7 @@ public class PostRepository {
 
   public Optional<Post> getById(long id) {
     return repository.stream()
-            .filter(x -> x.getId() == id)
+            .filter(x -> x.getId() == id && !x.isRemoved())
             .findFirst();
   }
 
@@ -32,16 +32,18 @@ public class PostRepository {
     if (post.getId() == NEW_POST){
       post.setId(counter.getAndIncrement());
       repository.add(post);
-    } else {
+    } else if (!post.isRemoved()){
       removeById(post.getId());
       repository.add(post);
+    } else {
+      throw new NotFoundException();
     }
     return post;
   }
 
   public void removeById(long id) {
     Optional<Post> optional = getById(id);
-    repository.remove(optional.orElseThrow(NotFoundException::new));
+    optional.orElseThrow(NotFoundException::new).setRemoved(true);
   }
 }
 
